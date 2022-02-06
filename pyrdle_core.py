@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import requests
-from bs4 import BeautifulSoup as BS
 import json as JSON
 from os.path import exists
 from math import log
