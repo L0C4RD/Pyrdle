@@ -30,7 +30,7 @@ class Pyrdle(object):
 			self.read_from_file(location)
 
 		else:
-			self.fetch_and_build_wordlist(location)
+			raise IOError(f"No wordlist found at {location}")
 
 		# Pre-build responses map.
 		responses = [""]
@@ -80,42 +80,6 @@ class Pyrdle(object):
 		
 		return s
 
-	def fetch_and_build_wordlist(self, output=None):
-
-		r = requests.get(self.base_url + self.mainpage)
-		html_page = BS(r.text, features="html.parser")
-
-		# Get JS link
-		try:
-			js_elem = html_page.find_all(defer="defer")[0]
-			js_loc = js_elem["src"]
-		except:
-			raise IOError("Could not find link to JS in page.")
-
-		# Get JS
-		r = requests.get(self.base_url + js_loc)
-
-		# Build array of all words (janky but whatever)
-		json_frags = r.text.split("N({", 1)[1]
-		json1, json_frags = json_frags.split("})", 1)
-
-		json_frags = json_frags.split("N({", 1)[1]
-		json2 = json_frags.split("})", 1)[0]
-
-		secret_words = JSON.loads('{"' + json1.replace(',', ',"').replace(':', '":') + "}")
-		possible_words = JSON.loads('{"' + json2.replace(',', ',"').replace(':', '":') + "}")
-
-		self.secret_words = self.create_flat_wordlist(secret_words)
-		self.possible_words = self.create_flat_wordlist(possible_words)
-
-		if output is not None:
-
-			with open(output, "w") as f:
-
-				f.write(",".join(self.secret_words) + "\n")
-				f.write(",".join(self.possible_words))
-
-		self.possible_words += self.secret_words
 
 	def read_from_file(self,inf=None):
 
@@ -130,18 +94,6 @@ class Pyrdle(object):
 
 		self.candidates = self.secret_words
 
-	def create_flat_wordlist(self, D):
-
-		made_words = []
-
-		for k in D:
-
-			s = D[k]
-
-			for i in range(0, len(s), 3):
-				made_words.append(k + s[i:i+3])
-
-		return made_words
 
 	# This be what absurdle do.
 	def find_adversarial_match(self,matches):
@@ -402,47 +354,5 @@ class Pyrdle(object):
 		index = index % len(secret_words)
 		
 		return secret_words[index]
-
-		"""
-		wordURLe = "https://www.powerlanguage.co.uk/wordle/"
-		
-		# Get wordle main page
-		r = requests.get(wordURLe)
-		
-		if r.status_code != 200:
-			print("Could not get today's Wordle.")
-			return
-
-		# Get script.
-		html_page = BS(r.text, features="html.parser")
-		
-		# Get JS link
-		try:
-			js_link = None
-			
-			js_elem = html_page.find_all("script", attrs={"src" : True})
-
-			for elem in js_elem:
-				if elem["src"][:5] == "main.":
-					js_link = elem["src"]
-					break
-
-			assert(js_link is not None)
-
-		except:
-			raise IOError("Could not find link to JS in page.")
-
-		# Get JS
-		r = requests.get(wordURLe + js_link)
-
-		# Build array of all secret words (janky but whatever)
-		json_frags = r.text.split("var La=", 1)[1]
-		json_frags = json_frags.split(",Ta", 1)[0]
-
-		secret_words = JSON.loads(json_frags)
-		
-		print (secret_words)
-		"""
-		
 
 		
