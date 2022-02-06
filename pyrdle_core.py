@@ -8,9 +8,6 @@ from time import mktime
 
 class Pyrdle(object):
 
-	base_url = "https://qntm.org/files/absurdle/"
-	mainpage = "absurdle.html"
-
 	default_file = "./words.dat"
 
 	W = 0
